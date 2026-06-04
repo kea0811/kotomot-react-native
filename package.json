@@ -1,7 +1,7 @@
 {
-  "name": "koto-react-native",
-  "version": "1.0.0",
-  "description": "React Native implementation of Koto SDK with AsyncStorage",
+  "name": "kotomot-react-native",
+  "version": "2.0.0",
+  "description": "React Native SDK for Kotomot — provider + useTranslation with AsyncStorage caching",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -21,11 +21,11 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kea0811/koto-react-native.git"
+    "url": "https://github.com/kea0811/kotomot-react-native.git"
   },
-  "homepage": "https://github.com/kea0811/koto-react-native",
+  "homepage": "https://github.com/kea0811/kotomot-react-native",
   "bugs": {
-    "url": "https://github.com/kea0811/koto-react-native/issues"
+    "url": "https://github.com/kea0811/kotomot-react-native/issues"
   },
   "peerDependencies": {
     "@react-native-async-storage/async-storage": ">=1.0.0",

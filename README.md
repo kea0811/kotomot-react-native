@@ -1,171 +1,72 @@
-# Koto React Native
+# kotomot-react-native
 
-> **Koto** (言) — Japanese for "word." Every translation starts with a single word. Koto bridges languages one word at a time.
+React Native SDK for [Kotomot](https://kotomot.app). A provider + `useTranslation()` hook that loads translations at runtime, caches them in AsyncStorage (with version-based revalidation), and switches locale live.
 
-A React Native implementation of the Koto SDK using AsyncStorage for persistent API key storage.
-
-## Installation
+## Install
 
 ```bash
-npm install koto-react-native @react-native-async-storage/async-storage
-```
-
-For iOS, you'll also need to run:
-```bash
+npm install kotomot-react-native @react-native-async-storage/async-storage
+# iOS:
 cd ios && pod install
 ```
 
-## Usage
-
-### 1. Wrap your app with KotoProvider
+## Quick start
 
 ```tsx
-import React from 'react';
-import { KotoProvider } from 'koto-react-native';
-import { AppContent } from './AppContent';
+import { KotoProvider, useTranslation } from 'kotomot-react-native';
 
 export default function App() {
   return (
-    <KotoProvider config={{ baseUrl: 'https://api.your-service.com' }}>
-      <AppContent />
+    <KotoProvider
+      apiKey={process.env.KOTOMOT_API_KEY!} // generated in the dashboard
+      projectId="your-project"
+      defaultLocale="en"
+    >
+      <Home />
     </KotoProvider>
   );
 }
-```
 
-### 2. Use the useKoto hook in your components
-
-```tsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, Button, ActivityIndicator } from 'react-native';
-import { useKoto } from 'koto-react-native';
-
-export function AppContent() {
-  const { 
-    apiKey, 
-    setApiKey, 
-    removeApiKey, 
-    makeRequest, 
-    isLoading, 
-    isAuthenticated 
-  } = useKoto();
-  
-  const [inputKey, setInputKey] = useState('');
-  const [data, setData] = useState(null);
-
-  const handleSetKey = async () => {
-    try {
-      await setApiKey(inputKey);
-      setInputKey('');
-    } catch (error) {
-      console.error('Failed to set API key:', error);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await removeApiKey();
-      setData(null);
-    } catch (error) {
-      console.error('Failed to remove API key:', error);
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      const response = await makeRequest('/api/data');
-      setData(response);
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-    }
-  };
-
-  if (isLoading) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
-
+function Home() {
+  const { t, ti, locale, setLocale, loading } = useTranslation();
+  if (loading) return <ActivityIndicator />;
   return (
-    <View style={{ flex: 1, padding: 20 }}>
-      {!isAuthenticated ? (
-        <View>
-          <Text>Enter your API Key:</Text>
-          <TextInput
-            value={inputKey}
-            onChangeText={setInputKey}
-            placeholder="Your API key"
-            secureTextEntry
-            style={{ 
-              borderWidth: 1, 
-              borderColor: '#ccc', 
-              padding: 10, 
-              marginVertical: 10 
-            }}
-          />
-          <Button title="Set API Key" onPress={handleSetKey} />
-        </View>
-      ) : (
-        <View>
-          <Text>You are authenticated!</Text>
-          <Button title="Fetch Data" onPress={fetchData} />
-          <Button title="Logout" onPress={handleLogout} color="red" />
-          
-          {data && (
-            <View style={{ marginTop: 20 }}>
-              <Text>Data:</Text>
-              <Text>{JSON.stringify(data, null, 2)}</Text>
-            </View>
-          )}
-        </View>
-      )}
+    <View>
+      <Text>{t('home.hero.title')}</Text>
+      <Text>{ti('home.greeting', { name: 'Jane' })}</Text>
+      <Button title="日本語" onPress={() => setLocale('ja')} />
     </View>
   );
 }
 ```
 
-## API Reference
+## `<KotoProvider>` props
 
-### KotoProvider
+| Prop | Type | | |
+|---|---|---|---|
+| `apiKey` | `string` | **required** | dashboard key |
+| `projectId` | `string` | **required** | slug or ID |
+| `defaultLocale` | `string` | **required** | a persisted choice overrides it |
+| `apiUrl` | `string` | default `https://api.kotomot.app` | host or full endpoint |
+| `namespace` | `string` | optional | filter to one namespace |
 
-The main provider component that manages the Koto context.
+## API
 
-**Props:**
-- `config` (optional): Configuration object
-  - `baseUrl`: Base URL for API requests (default: 'https://api.koto.dev')
-  - `headers`: Additional headers to include in requests
-  - `timeout`: Request timeout in milliseconds
+`useTranslation()` → `{ t, ti, tp, locale, setLocale, loading, availableLocales, refresh }`
 
-### useKoto Hook
+```ts
+t(key, fallback?)                  // look up a key
+ti(key, params, fallback?)         // interpolate — supports {var} and {{var}}
+tp(key, count, params?)            // pluralize — key.zero / .one / .other
+setLocale(code)                    // switch language (persisted)
+availableLocales                   // LocaleInfo[] from /v1/locales (for a picker)
+refresh()                          // re-check the published version
+```
 
-Returns the Koto context with the following properties:
+`useKoto()` returns the full context (adds `translations`, `error`, `version`).
 
-- `apiKey`: Current API key (string | null)
-- `setApiKey(key: string)`: Set the API key (saves to AsyncStorage)
-- `removeApiKey()`: Remove the API key (clears from AsyncStorage)
-- `baseUrl`: Current base URL
-- `setBaseUrl(url: string)`: Update the base URL
-- `makeRequest<T>(endpoint: string, options?: RequestInit)`: Make authenticated API requests
-- `isLoading`: Loading state for initial API key retrieval
-- `error`: Error message if any
-- `isAuthenticated`: Boolean indicating if user has an API key
+## Caching
 
-## Features
-
-- **Persistent Storage**: API keys are automatically saved to AsyncStorage and persist across app sessions
-- **Type Safety**: Full TypeScript support with type definitions
-- **React Native Optimized**: Built specifically for React Native with AsyncStorage integration
-- **Simple API**: Easy to use hooks and context API
-- **Secure**: API keys are stored securely in AsyncStorage
-
-## Requirements
-
-- React Native >= 0.60.0
-- React >= 16.8.0
-- @react-native-async-storage/async-storage >= 1.0.0
-
-## License
+Translations are cached in **AsyncStorage** (one entry per locale). On load the cached bundle renders immediately, then the published version is checked and the bundle refetched only if it changed. The selected locale is persisted across launches.
 
 MIT

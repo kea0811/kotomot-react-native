@@ -1,8 +1,11 @@
-export { KotoProvider, KotoContext } from './KotoProvider';
-export { useKoto } from './useKoto';
+export { KotoProvider, KotoContext, useKoto, useTranslation } from './KotoProvider';
+export { storage } from './storage';
+export { getNested, interpolate } from './translator';
 export type {
   KotoConfig,
-  KotoContextType,
-  RequestOptions,
-  KotoResponse
+  KotoProviderProps,
+  KotoContextValue,
+  LocaleInfo,
+  StoredTranslations,
+  TranslationData,
 } from './types';
